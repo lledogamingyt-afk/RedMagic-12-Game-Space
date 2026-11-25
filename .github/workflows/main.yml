@@ -34,15 +34,22 @@ jobs:
           EOF
           python3 -c '
           import glob
-          imports = "\nimport android.app.ActivityManager\nimport android.content.IntentFilter\nimport android.media.projection.MediaProjection\nimport android.media.projection.MediaProjectionManager\n"
+          needed = [
+              "import android.app.ActivityManager",
+              "import android.content.IntentFilter",
+              "import android.media.projection.MediaProjection",
+              "import android.media.projection.MediaProjectionManager"
+          ]
           for path in glob.glob("app/src/main/java/**/*.kt", recursive=True):
               with open(path, "r") as f:
                   content = f.read()
-              lines = content.splitlines()
-              if lines and lines[0].startswith("package "):
-                  lines.insert(1, imports)
-                  with open(path, "w") as f:
-                      f.write("\n".join(lines))
+              to_add = [imp for imp in needed if imp not in content]
+              if to_add:
+                  lines = content.splitlines()
+                  if lines and lines[0].startswith("package "):
+                      lines.insert(1, "\n" + "\n".join(to_add) + "\n")
+                      with open(path, "w") as f:
+                          f.write("\n".join(lines))
           '
 
       - name: Set up JDK 17
@@ -64,3 +71,4 @@ jobs:
         with:
           name: app-debug
           path: app/build/outputs/apk/debug/app-debug.apk
+
